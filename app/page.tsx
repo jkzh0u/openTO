@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import TPS from "./components/TPS"
 import TTC from "./components/TTC"
 import FIRE from "./components/FIRE"
+import GO from "./components/GO"
 export default function Home() {
   const [message, setMessage] = useState()
 
@@ -23,6 +24,7 @@ export default function Home() {
     <TPS></TPS>
     <TTC></TTC>
     <FIRE></FIRE>
+    <GO></GO>
     </div>
   )
 }
