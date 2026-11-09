@@ -1,0 +1,59 @@
+"use client";
+
+import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import type { Story } from "../lib/news";
+import { useNewsFeed, useNow, type Feeds } from "../lib/useNewsFeed";
+import BreakingBanner from "./BreakingBanner";
+import Masthead from "./Masthead";
+import StoryDialog from "./StoryDialog";
+
+type News = {
+  feeds: Feeds;
+  breakingIds: Set<string>;
+  now: number | null;
+  openStory: (story: Story) => void;
+};
+
+const NewsContext = createContext<News | null>(null);
+
+export function useNews(): News {
+  const news = useContext(NewsContext);
+  if (!news) throw new Error("useNews must be used inside NewsShell");
+  return news;
+}
+
+// Lives in the root layout so polling and the banner carry on across page changes.
+export default function NewsShell({ children }: { children: ReactNode }) {
+  const { feeds, breaking } = useNewsFeed();
+  const [selected, setSelected] = useState<Story | null>(null);
+  const now = useNow();
+  const newestForBanner = breaking.find((story) => story.section !== "go");
+  const news = useMemo(
+    () => ({ feeds, now, openStory: setSelected, breakingIds: new Set(breaking.map((story) => story.id)) }),
+    [feeds, now, breaking]
+  );
+
+  return (
+    <NewsContext value={news}>
+      {/* Keyed on the newest story so a fresh arrival restarts the banner on its section. */}
+      <BreakingBanner
+        key={newestForBanner?.id ?? "start"}
+        feeds={feeds}
+        now={now}
+        startWith={newestForBanner?.section}
+        onOpen={setSelected}
+      />
+
+      <div className="paper">
+        <Masthead now={now} />
+        {children}
+        <footer className="colophon">
+          Live data from Toronto Police Service, Toronto Fire Services, the TTC and Metrolinx. Weather by{" "}
+          <a href="https://open-meteo.com/">Open-Meteo</a>. Not an actual newspaper.
+        </footer>
+      </div>
+
+      {selected && <StoryDialog story={selected} onClose={() => setSelected(null)} />}
+    </NewsContext>
+  );
+}

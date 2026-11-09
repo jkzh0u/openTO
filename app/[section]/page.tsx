@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import { SectionPage } from "../components/Section";
+import { SECTION_IDS, SECTIONS, type SectionId } from "../lib/news";
+
+type Props = { params: Promise<{ section: string }> };
+
+// Anything other than the four sections is a 404.
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return SECTION_IDS.map((section) => ({ section }));
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { section } = await params;
+  return { title: `${SECTIONS[section as SectionId].title} | The OpenTO` };
+}
+
+export default async function Page({ params }: Props) {
+  const { section } = await params;
+  return <SectionPage id={section as SectionId} />;
+}

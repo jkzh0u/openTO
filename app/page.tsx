@@ -1,30 +1,23 @@
-'use client'
-import { useEffect, useState } from 'react'
+import type { ReactNode } from "react";
+import { ByTheNumbers, GoLineStatus, TorontoConditions } from "./components/FrontExtras";
+import { SectionPreview } from "./components/Section";
+import { SECTION_IDS, type SectionId } from "./lib/news";
 
-import TPS from "./components/TPS"
-import TTC from "./components/TTC"
-import FIRE from "./components/FIRE"
-import GO from "./components/GO"
+// Shorter columns get these below their stories, in whatever room is left.
+const FILLERS: Partial<Record<SectionId, ReactNode>> = {
+  fire: <TorontoConditions />,
+  go: <GoLineStatus />,
+};
+
 export default function Home() {
-  const [message, setMessage] = useState()
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch('/api/hello')
-      const { message } = await res.json()
-      setMessage(message)
-    }
-    fetchData()
-  }, [])
-
-  if (!message) return <p>Loading...</p>
-
   return (
-    <div>
-    <TPS></TPS>
-    <TTC></TTC>
-    <FIRE></FIRE>
-    <GO></GO>
-    </div>
-  )
+    <main className="front">
+      {SECTION_IDS.map((id) => (
+        <SectionPreview key={id} id={id}>
+          {FILLERS[id]}
+        </SectionPreview>
+      ))}
+      <ByTheNumbers />
+    </main>
+  );
 }
