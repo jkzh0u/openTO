@@ -209,6 +209,56 @@ button {
   text-underline-offset: 3px;
 }
 
+.masthead__main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 20px;
+}
+
+.ear {
+  justify-self: start;
+  text-align: left;
+}
+
+.ear__main {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-label), sans-serif;
+  font-size: 0.95rem;
+}
+
+.ear__main b {
+  font-family: var(--font-headline), serif;
+  font-size: 1.9rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.ear__details {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 0 18px;
+  margin: 2px 0 0;
+  font-family: var(--font-label), sans-serif;
+  font-size: 0.8rem;
+}
+
+.ear__details div {
+  display: flex;
+  gap: 6px;
+}
+
+.ear__details dt {
+  color: var(--ink-soft);
+}
+
+.ear__details dd {
+  margin: 0;
+  font-weight: 500;
+}
+
 .masthead__name {
   margin: 12px 0 0;
   font-family: var(--font-nameplate), serif;
@@ -317,7 +367,9 @@ button {
   list-style: none;
 }
 
+/* Rows share any spare height, so a roomy box has no blank strip at the bottom. */
 .filler__list li {
+  flex: 1 0 auto;
   width: 100%;
   padding: 6px 0;
   border-top: 1px solid var(--rule-soft);
@@ -330,6 +382,14 @@ button {
   gap: 8px;
   font-size: 0.93rem;
   line-height: 1.25;
+}
+
+.filler-row--alarm {
+  grid-template-columns: 1rem minmax(0, 1fr);
+}
+
+.filler__list li.filler-row--alarm {
+  padding: 3px 0;
 }
 
 .filler-row .go-line {
@@ -350,7 +410,7 @@ button {
   grid-column: 1 / -1;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  align-items: center;
+  align-items: start;
   gap: 28px;
 }
 
@@ -430,6 +490,13 @@ button {
   border-top: 1px solid var(--rule-soft);
 }
 
+.section__subhead {
+  margin: 18px 0 4px;
+  font-family: var(--font-headline), serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
 .section__list--grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
@@ -465,6 +532,14 @@ button {
   grid-template-columns: minmax(0, 1fr) 320px;
   align-items: start;
   gap: 36px;
+}
+
+.section-page__columns--map {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.section-page__columns--map .ttc-map {
+  margin-top: 0;
 }
 
 /* ---------- police stats ---------- */
@@ -1032,6 +1107,53 @@ button {
   font-size: 0.9rem;
 }
 
+/* On the front page both maps stretch to the bottom of their column. */
+.front > .section .ttc-map,
+.front > .section .stats__map--compact {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.front > .section .ttc-map__plot,
+.front > .section .stats__map--compact .map {
+  margin: auto 0;
+}
+
+/* ---------- police mini map ---------- */
+
+.stats__map--compact {
+  --mark: #2c66b8;
+  margin: 14px 0 0;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--ink);
+  background: var(--page);
+}
+
+.stats__map--compact .stats__title {
+  margin-bottom: 4px;
+  font-size: 1.3rem;
+}
+
+.stats__map--compact .map__label {
+  font-size: 0.62rem;
+}
+
+.stats__map--compact .map__lake {
+  font-size: 0.68rem;
+}
+
+.stats__map--compact .map__dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  box-shadow: 0 0 0 1px var(--page);
+}
+
+.stats__map--compact .map__shape path {
+  fill: var(--paper);
+}
+
 /* ---------- TTC mini map ---------- */
 
 .ttc-map {
@@ -1039,6 +1161,7 @@ button {
   padding: 10px 12px 12px;
   background: var(--ink);
   color: var(--page);
+  font-family: Helvetica, Arial, sans-serif;
 }
 
 .ttc-map__head {
@@ -1052,17 +1175,15 @@ button {
 
 .ttc-map__title {
   margin: 0;
-  font-family: var(--font-headline), serif;
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .ttc-map__legend {
   display: flex;
   gap: 10px;
-  font-family: var(--font-label), sans-serif;
-  font-size: 0.76rem;
-  letter-spacing: 0.03em;
+  font-size: 0.74rem;
+  font-weight: 600;
 }
 
 .ttc-map__legend span {
@@ -1138,14 +1259,19 @@ button {
 
 .ttc-map__place {
   fill: var(--page);
-  font-family: var(--font-label), sans-serif;
-  font-size: 8.5px;
-  letter-spacing: 0.03em;
+  font-size: 7.5px;
+  font-weight: 700;
 }
 
 .ttc-map .map__tip {
   background: var(--page);
   color: var(--ink);
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 0.76rem;
+}
+
+.ttc-map .map__tip b {
+  font-weight: 700;
 }
 
 .ttc-map__note {
@@ -1280,6 +1406,16 @@ button {
 }
 
 /* ---------- smaller screens ---------- */
+
+@media (max-width: 900px) {
+  .masthead__main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ear {
+    display: none;
+  }
+}
 
 @media (max-width: 1040px) {
   .front {

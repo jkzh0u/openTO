@@ -21,10 +21,11 @@ export type Story = {
     effect: string;
     detail: string | null;
     inEffect: boolean;
+    scheduledFor: Date | null;
   };
 };
 
-export type TtcStatus = "ok" | "closed" | "detour" | "delay";
+export type TtcStatus = "ok" | "closed" | "detour" | "delay" | "scheduled";
 
 export const SECTION_IDS: SectionId[] = ["police", "fire", "ttc", "go"];
 
@@ -287,14 +288,12 @@ type RawTtcAlert = {
 };
 
 // Planned work is often listed for days but only runs in nightly windows.
-function ttcAlertInEffect(a: RawTtcAlert, start: Date, end: Date | null): boolean {
-  const now = Date.now();
-  if (a.childAlerts?.length) {
-    return a.childAlerts.some(
-      (child) => parseLocalTime(child.startTime).getTime() <= now && now <= parseLocalTime(child.endTime).getTime()
-    );
-  }
-  return start.getTime() <= now && (end === null || now <= end.getTime());
+function ttcWindows(a: RawTtcAlert, start: Date, end: Date | null): { start: Date; end: Date | null }[] {
+  if (!a.childAlerts?.length) return [{ start, end }];
+  return a.childAlerts.map((child) => ({
+    start: parseLocalTime(child.startTime),
+    end: parseLocalTime(child.endTime),
+  }));
 }
 
 const SUBWAY_LINE_COLOURS: Record<string, { background: string; color: string }> = {
@@ -326,25 +325,37 @@ async function loadTTC(): Promise<Story[]> {
   const data = await getJson(TTC_URL);
   return data.routeAlerts
     .filter((a: RawTtcAlert) => a.routeType !== "Escalator" && a.routeType !== "Elevator")
-    .map((a: RawTtcAlert): Story => {
+    .map((a: RawTtcAlert): Story | null => {
       const routes = a.route.split(",").join(", ");
       const firstRoute = a.route.split(",")[0];
       const lineColours = a.routeType === "Subway" ? SUBWAY_LINE_COLOURS[firstRoute] : undefined;
       const label = `${a.routeType === "Subway" ? "Line" : "Route"} ${routes}`;
       const start = parseLocalTime(a.activePeriod.start);
       const end = a.activePeriod.end.startsWith("0001") ? null : parseLocalTime(a.activePeriod.end);
+
+      const now = Date.now();
+      const windows = ttcWindows(a, start, end);
+      const current = windows.find((w) => w.start.getTime() <= now && (w.end === null || now <= w.end.getTime()));
+      const next = windows
+        .filter((w) => w.start.getTime() > now)
+        .sort((x, y) => x.start.getTime() - y.start.getTime())[0];
+      const shown = current ?? next;
+      if (!shown) return null; // Every window has already finished.
+      const isNextOfSeveral = !current && windows.length > 1;
+
       return {
         id: `ttc-${a.id}`,
         section: "ttc",
         headline: `${label}: ${a.effectDesc}`,
         summary: a.headerText,
-        time: start,
+        time: current ? current.start : start,
         ttc: {
           label: firstRoute,
           isLine: Boolean(lineColours),
           ...(lineColours ?? { background: "#d9271e", color: "#ffffff" }),
-          status: ttcStatus(a.effectDesc),
-          inEffect: ttcAlertInEffect(a, start, end),
+          status: current ? ttcStatus(a.effectDesc) : "scheduled",
+          inEffect: Boolean(current),
+          scheduledFor: current ? null : shown.start,
           effect: a.effectDesc,
           detail:
             a.stopStart && a.stopEnd
@@ -361,11 +372,14 @@ async function loadTTC(): Promise<Story[]> {
           ["Direction", a.direction],
           ["Between", a.stopStart && a.stopEnd && a.stopStart !== a.stopEnd ? `${a.stopStart} → ${a.stopEnd}` : null],
           ["At", a.stopStart && a.stopStart === a.stopEnd ? a.stopStart : null],
-          ["Starts", formatDateTime(start)],
-          ["Ends", end ? formatDateTime(end) : "Until further notice"],
+          ["Status", current ? "In effect" : "Scheduled"],
+          [isNextOfSeveral ? "Next start" : "Starts", formatDateTime(shown.start)],
+          [isNextOfSeveral ? "Next end" : "Ends", shown.end ? formatDateTime(shown.end) : "Until further notice"],
+          ["Posted", formatDateTime(start)],
         ]),
       };
-    });
+    })
+    .filter((story: Story | null): story is Story => story !== null);
 }
 
 // ---------- GO Transit ----------

@@ -23,6 +23,7 @@ const STATUS_STYLES: Record<TtcStatus, { fill: string; glyph: string }> = {
   closed: { fill: "#d9271e", glyph: "M8.5 8.5l7 7M15.5 8.5l-7 7" },
   detour: { fill: "#f08a24", glyph: "M9 18v-5.5h6V7.5M12.5 10l2.5-2.5 2.5 2.5" },
   delay: { fill: "#d98a00", glyph: "M12 6.5V12l3.5 2.2" },
+  scheduled: { fill: "#6b6456", glyph: "M12 6.5V12l3.5 2.2" },
 };
 
 function TtcStatusIcon({ status }: { status: TtcStatus }) {

@@ -133,7 +133,7 @@ export default function TtcMiniMap() {
       >
         <svg viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`} aria-hidden="true">
           {MAP_LINES.map((line) => (
-            <polyline key={line.id} points={line.points} className="ttc-map__line" style={{ stroke: line.colour }} />
+            <path key={line.id} d={line.path} className="ttc-map__line" style={{ stroke: line.colour }} />
           ))}
 
           {ALL_STATIONS.map((station) => (

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SECTION_IDS, SECTIONS } from "../lib/news";
+import WeatherEar from "./WeatherEar";
 
 const TORONTO = "America/Toronto";
 
@@ -32,10 +33,15 @@ export default function Masthead({ now }: { now: number | null }) {
             : " "}
         </span>
       </div>
-      <h1 className="masthead__name">
-        <Link href="/">The OpenTO</Link>
-      </h1>
-      <p className="masthead__tagline">toronto&apos;s open news</p>
+      <div className="masthead__main">
+        <WeatherEar />
+        <div>
+          <h1 className="masthead__name">
+            <Link href="/">The OpenTO</Link>
+          </h1>
+          <p className="masthead__tagline">toronto&apos;s open news</p>
+        </div>
+      </div>
       <nav className="masthead__nav" aria-label="Sections">
         <Link href="/" aria-current={current("/")}>
           Front Page

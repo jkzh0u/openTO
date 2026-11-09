@@ -1,54 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { activeTtcDisruptions, type SectionId } from "../lib/news";
+import { activeTtcDisruptions, ALARM_LEVELS, type SectionId } from "../lib/news";
 import GoLineHeading from "./GoLineHeading";
 import { useNews } from "./NewsShell";
 
-const WEATHER_POLL_MS = 600_000;
-
-export function TorontoConditions() {
-  const [rows, setRows] = useState<{ label: string; value: string }[] | null>(null);
-  const [failed, setFailed] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const response = await fetch("/api/weather");
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        if (cancelled) return;
-        setRows(data.rows);
-        setFailed(false);
-      } catch (error) {
-        console.error("Could not load the weather", error);
-        if (!cancelled) setFailed(true);
-      }
-    }
-
-    load();
-    const timer = setInterval(load, WEATHER_POLL_MS);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, []);
-
+export function FireAlarmKey() {
   return (
     <aside className="filler">
       <header className="filler__head">
-        <p className="section__kicker">Toronto, right now</p>
-        <h3 className="filler__title">Conditions</h3>
+        <p className="section__kicker">How big is it</p>
+        <h3 className="filler__title">Alarm Levels</h3>
       </header>
       <ul className="filler__list">
-        {!rows && <li className="filler-row__quiet">{failed ? "Weather unavailable." : "Checking outside…"}</li>}
-        {rows?.map(({ label, value }) => (
-          <li key={label} className="filler-row">
-            <span>{label}</span>
-            <span className="filler-row__value">{value}</span>
+        {ALARM_LEVELS.map(({ level, meaning }) => (
+          <li key={level} className="filler-row filler-row--alarm">
+            <span className="filler-row__value">{level}</span>
+            <span>{meaning}</span>
           </li>
         ))}
       </ul>

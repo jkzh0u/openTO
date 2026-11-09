@@ -102,7 +102,7 @@ const LINE_DEFINITIONS: LineDefinition[] = [
       ],
       [140, 136, ["Bay", "Bloor-Yonge"]],
       [
-        240,
+        236,
         136,
         [
           "Sherbourne",
@@ -117,6 +117,7 @@ const LINE_DEFINITIONS: LineDefinition[] = [
           "Main Street",
         ],
       ],
+      [246, 136, []],
       [286, 96, ["Victoria Park", "Warden", "Kennedy"]],
     ],
   },
@@ -129,7 +130,9 @@ const LINE_DEFINITIONS: LineDefinition[] = [
       [116, 96, ["Downsview Park", "Sheppard West", "Wilson", "Yorkdale", "Lawrence West", "Glencairn", "Cedarvale"]],
       [125, 136, ["St Clair West", "Dupont", "Spadina", "St George"]],
       [125, 178, ["Museum", "Queen's Park", "St Patrick", "Osgoode", "St Andrew"]],
+      [125, 192, []],
       [132.5, 192, ["Union"]],
+      [140, 192, []],
       [140, 178, ["King"]],
       [140, 136, ["Queen", "TMU", "College", "Wellesley", "Bloor-Yonge"]],
       [140, 96, ["Rosedale", "Summerhill", "St Clair", "Davisville", "Eglinton"]],
@@ -146,6 +149,29 @@ export type MapStation = { line: string; name: string; x: number; y: number; isI
 
 function round(value: number) {
   return Math.round(value * 100) / 100;
+}
+
+// Turns a list of points into an SVG path with curved bends instead of sharp corners.
+function roundedPath(points: [number, number][], radius = 8): string {
+  let path = `M${points[0].join(" ")}`;
+  for (let i = 1; i < points.length - 1; i++) {
+    const [x, y] = points[i];
+    const inX = x - points[i - 1][0];
+    const inY = y - points[i - 1][1];
+    const outX = points[i + 1][0] - x;
+    const outY = points[i + 1][1] - y;
+    if (Math.abs(inX * outY - inY * outX) < 1e-6) continue;
+
+    const inLength = Math.hypot(inX, inY);
+    const outLength = Math.hypot(outX, outY);
+    const cut = Math.min(radius, inLength, outLength);
+    const startX = round(x - (inX / inLength) * cut);
+    const startY = round(y - (inY / inLength) * cut);
+    const endX = round(x + (outX / outLength) * cut);
+    const endY = round(y + (outY / outLength) * cut);
+    path += `L${startX} ${startY}Q${x} ${y} ${endX} ${endY}`;
+  }
+  return `${path}L${points[points.length - 1].join(" ")}`;
 }
 
 const stationCounts = new Map<string, number>();
@@ -177,7 +203,7 @@ export const MAP_LINES = LINE_DEFINITIONS.map(({ id, colour, start, segments }) 
     y,
     isInterchange: (stationCounts.get(name) ?? 0) > 1,
   }));
-  return { id, colour, points: points.map((point) => point.join(",")).join(" "), stations };
+  return { id, colour, path: roundedPath(points), stations };
 });
 
 const ALIASES: Record<string, string> = {

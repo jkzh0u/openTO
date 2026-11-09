@@ -134,7 +134,7 @@ function CallsOverTime({ bins }: { bins: NonNullable<ReturnType<typeof computeSt
   );
 }
 
-function CallMap({ calls }: { calls: Story[] }) {
+function CallMap({ calls, compact }: { calls: Story[]; compact?: boolean }) {
   const { now, openStory } = useNews();
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -168,10 +168,12 @@ function CallMap({ calls }: { calls: Story[] }) {
   const lake = mapPosition(LAKE_LABEL.lat, LAKE_LABEL.lng);
 
   return (
-    <figure className="stats__map">
+    <figure className={compact ? "stats__map stats__map--compact" : "stats__map"}>
       <figcaption className="stats__title">
-        Where the calls are
-        <span className="stats__sub">Toronto by police division. Each dot is one call, click one to open it.</span>
+        {compact ? "Police Map" : "Where the calls are"}
+        {!compact && (
+          <span className="stats__sub">Toronto by police division. Each dot is one call, click one to open it.</span>
+        )}
       </figcaption>
       <div
         className={active ? "map map--hot" : "map"}
@@ -220,6 +222,12 @@ function CallMap({ calls }: { calls: Story[] }) {
       </div>
     </figure>
   );
+}
+
+export function MiniPoliceMap() {
+  const stories = useNews().feeds.police.stories;
+  const calls = useMemo(() => stories.filter((story) => story.police), [stories]);
+  return calls.length > 0 ? <CallMap calls={calls} compact /> : null;
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
