@@ -36,9 +36,20 @@ export const SECTION_IDS: SectionId[] = ["police", "fire", "ttc", "go"];
 
 export const SECTIONS: Record<
   SectionId,
-  { title: string; kicker: string; byline: string; empty: string; note?: string }
+  {
+    title: string;
+    kicker: string;
+    byline: string;
+    empty: string;
+    note?: string;
+    seoTitle: string;
+    seoDescription: string;
+  }
 > = {
   police: {
+    seoTitle: "Toronto Police Calls Live Map | The OpenTO",
+    seoDescription:
+      "See recent Toronto Police calls for service on a live map by division, with the most reported call types and the busiest divisions.",
     title: "Police",
     kicker: "Calls for service",
     byline: "our police scanner",
@@ -46,6 +57,9 @@ export const SECTIONS: Record<
     note: "Calls for service are unconfirmed reports, not findings of fact.",
   },
   fire: {
+    seoTitle: "Toronto Fire Incidents Live Map | The OpenTO",
+    seoDescription:
+      "See active Toronto Fire Services incidents on a live map, with the nearest fire hall, units dispatched and alarm levels.",
     title: "Fire",
     kicker: "Active incidents",
     byline: "a reporter standing well back",
@@ -53,12 +67,18 @@ export const SECTIONS: Record<
     note: "Alarm levels 2 and up count pumpers, aerials, rescues and squads. Support vehicles such as hazmat, air lights, chiefs and command vehicles are not included.",
   },
   ttc: {
+    seoTitle: "TTC Delays and Subway Closures Right Now | The OpenTO",
+    seoDescription:
+      "Check current TTC delays, subway closures, slow zones and streetcar and bus alerts on a live subway map, plus scheduled work coming up.",
     title: "TTC",
     kicker: "When is there no alerts?",
     byline: "a commuter on a shuttle bus",
     empty: "No service alerts. Frame this page.",
   },
   go: {
+    seoTitle: "GO Transit Delays and Service Alerts | The OpenTO",
+    seoDescription:
+      "Check live GO Transit train delays and the status of every line, plus scheduled service changes coming up.",
     title: "GO Transit",
     kicker: "Take the GO",
     byline: "someone still on the platform",
@@ -67,6 +87,13 @@ export const SECTIONS: Record<
 };
 
 // ---------- text and time helpers ----------
+
+const TORONTO = "America/Toronto";
+
+export function newestFirst(stories: Story[]): Story[] {
+  const unique = [...new Map(stories.map((story) => [story.id, story])).values()];
+  return unique.sort((a, b) => b.time.getTime() - a.time.getTime());
+}
 
 function titleCase(text: string): string {
   return text.toLowerCase().replace(/(^|[\s/(-])([a-z])/g, (_, gap, letter) => gap + letter.toUpperCase());
@@ -88,18 +115,50 @@ function htmlToText(html: string): string {
 function parseLocalTime(value: string): Date {
   const usFormat = value.match(/^(\d{2})\/(\d{2})\/(\d{4}) (.*)$/);
   const iso = usFormat ? `${usFormat[3]}-${usFormat[1]}-${usFormat[2]}T${usFormat[4]}` : value;
-  const date = new Date(iso.replace(" ", "T").replace(/Z$/, ""));
-  return Number.isNaN(date.getTime()) ? new Date() : date;
+  const asIfUtc = Date.parse(`${iso.replace(" ", "T").replace(/Z$/, "")}Z`);
+  if (Number.isNaN(asIfUtc)) return new Date();
+  // Checked twice so times next to a daylight saving change land on the right offset.
+  const firstGuess = asIfUtc - torontoOffset(asIfUtc);
+  return new Date(asIfUtc - torontoOffset(firstGuess));
+}
+
+const TORONTO_PARTS = new Intl.DateTimeFormat("en-US", {
+  timeZone: TORONTO,
+  hourCycle: "h23",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+});
+
+// How far Toronto's clock is ahead of UTC at a moment, regardless of this machine's timezone.
+function torontoOffset(utc: number): number {
+  const parts = Object.fromEntries(
+    TORONTO_PARTS.formatToParts(new Date(utc)).map((part) => [part.type, Number(part.value)])
+  );
+  const wallClock = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+  return wallClock - Math.floor(utc / 1000) * 1000;
+}
+
+// Server and browser disagree on which kind of space goes before "a.m.", which would
+// otherwise make React think the page changed.
+export function plainSpaces(text: string): string {
+  return text.replace(/ /g, " ");
 }
 
 export function formatDateTime(date: Date): string {
-  return date.toLocaleString("en-CA", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return plainSpaces(
+    date.toLocaleString("en-CA", {
+      timeZone: TORONTO,
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    })
+  );
 }
 
 export function timeAgo(date: Date, now: number): string {
@@ -125,7 +184,7 @@ async function getJson(url: string) {
 
 // ---------- Toronto Police ----------
 
-const POLICE_URL =
+export const POLICE_URL =
   "https://services.arcgis.com/S9th0jAJ7bqgIRjw/arcgis/rest/services/C4S_Public_NoGO/FeatureServer/0/query?where=1%3D1&outFields=*&orderByFields=OCCURRENCE_TIME+DESC&resultRecordCount=2000&outSR=4326&f=json";
 
 type RawPoliceCall = {
@@ -140,8 +199,7 @@ type RawPoliceCall = {
   };
 };
 
-async function loadPolice(): Promise<Story[]> {
-  const data = await getJson(POLICE_URL);
+export function policeStories(data: { features: RawPoliceCall[] }): Story[] {
   return data.features.map(({ attributes: a }: RawPoliceCall): Story => {
     const type = titleCase(a.CALL_TYPE);
     // Some calls have blank streets, which arrive as " - ".
@@ -173,7 +231,7 @@ async function loadPolice(): Promise<Story[]> {
 
 // ---------- Toronto Fire ----------
 
-type FireEvent = {
+export type FireEvent = {
   eventNum: string;
   type: string;
   street: string;
@@ -242,8 +300,7 @@ function cleanFireStreet(street: string): string {
   return /^[A-Z]\d[A-Z]$/.test(street) ? street : titleCase(street.replace(/,\s*[A-Z]{2}$/, ""));
 }
 
-async function loadFire(): Promise<Story[]> {
-  const events: FireEvent[] = await getJson("/api/fire");
+export function fireStories(events: FireEvent[]): Story[] {
   return events.map((e): Story => {
     const units = [...new Set(e.units)]; // The feed sometimes lists a unit twice.
     const street = cleanFireStreet(e.street);
@@ -282,7 +339,7 @@ async function loadFire(): Promise<Story[]> {
 
 // ---------- TTC ----------
 
-const TTC_URL = "https://www.ttc.ca/ttcapi/routedetail//getallroutesandstopsalerts";
+export const TTC_URL = "https://www.ttc.ca/ttcapi/routedetail//getallroutesandstopsalerts";
 
 type RawTtcAlert = {
   id: string;
@@ -332,8 +389,7 @@ export function activeTtcDisruptions(stories: Story[], now: number | null): Stor
   return stories.filter((story) => story.ttc?.status !== "ok" && story.ttc?.inEffect && isActive(story));
 }
 
-async function loadTTC(): Promise<Story[]> {
-  const data = await getJson(TTC_URL);
+export function ttcStories(data: { routeAlerts: RawTtcAlert[] }): Story[] {
   return data.routeAlerts
     .filter((a: RawTtcAlert) => a.routeType !== "Escalator" && a.routeType !== "Elevator")
     .map((a: RawTtcAlert): Story | null => {
@@ -445,8 +501,7 @@ function goLineHeading(line: RawGoLine): NonNullable<Story["goLine"]> {
   return { name: line.CorridorName, colour, textColour: isLight ? "#1b1712" : "#ffffff" };
 }
 
-async function loadGO(): Promise<FeedData> {
-  const data = await getJson("/api/go");
+export function goFeed(data: { Trains?: { Train?: RawGoLine[] } }): FeedData {
   const lines: RawGoLine[] = data.Trains?.Train ?? [];
 
   const delays = lines.flatMap((line) =>
@@ -508,9 +563,10 @@ async function loadGO(): Promise<FeedData> {
 export type GoLine = NonNullable<Story["goLine"]>;
 export type FeedData = { stories: Story[]; goLines?: GoLine[] };
 
+// What the browser polls. The first page load is filled in by serverFeeds.ts instead.
 export const LOADERS: Record<SectionId, () => Promise<FeedData>> = {
-  police: async () => ({ stories: await loadPolice() }),
-  fire: async () => ({ stories: await loadFire() }),
-  ttc: async () => ({ stories: await loadTTC() }),
-  go: loadGO,
+  police: async () => ({ stories: policeStories(await getJson(POLICE_URL)) }),
+  fire: async () => ({ stories: fireStories(await getJson("/api/fire")) }),
+  ttc: async () => ({ stories: ttcStories(await getJson(TTC_URL)) }),
+  go: async () => goFeed(await getJson("/api/go")),
 };

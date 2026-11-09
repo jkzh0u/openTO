@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import FireMap from "./components/FireMap";
 import { ByTheNumbers, GoLineStatus } from "./components/FrontExtras";
@@ -17,6 +18,8 @@ const AFTER: Partial<Record<SectionId, ReactNode>> = {
 const FILLERS: Partial<Record<SectionId, ReactNode>> = {
   go: <GoLineStatus />,
 };
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default function Home() {
   return (

@@ -24,11 +24,19 @@ export function useNews(): News {
 }
 
 // Lives in the root layout so polling and the banner carry on across page changes.
-export default function NewsShell({ children }: { children: ReactNode }) {
-  const { feeds, breaking } = useNewsFeed();
+export default function NewsShell({
+  children,
+  initialFeeds,
+  serverNow,
+}: {
+  children: ReactNode;
+  initialFeeds: Feeds;
+  serverNow: number;
+}) {
+  const { feeds, breaking } = useNewsFeed(initialFeeds);
   const subway = useSubwayIssues();
   const [selected, setSelected] = useState<Story | null>(null);
-  const now = useNow();
+  const now = useNow(serverNow);
   const newestForBanner = breaking.find((story) => story.section !== "go");
   const news = useMemo(
     () => ({ feeds, subway, now, openStory: setSelected, breakingIds: new Set(breaking.map((story) => story.id)) }),

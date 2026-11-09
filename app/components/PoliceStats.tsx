@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type PointerEvent } from "react";
-import { timeAgo, type Story } from "../lib/news";
+import { plainSpaces, timeAgo, type Story } from "../lib/news";
 import divisionMap from "../lib/policeDivisions.json";
 import { useNews } from "./NewsShell";
 
@@ -27,8 +27,8 @@ function binLabel(start: number) {
   const date = new Date(start);
   const onTheHour = date.getMinutes() === 0;
   return {
-    tick: onTheHour ? date.toLocaleTimeString("en-CA", { timeZone: TORONTO, hour: "numeric" }) : "",
-    full: date.toLocaleTimeString("en-CA", { timeZone: TORONTO, hour: "numeric", minute: "2-digit" }),
+    tick: onTheHour ? plainSpaces(date.toLocaleTimeString("en-CA", { timeZone: TORONTO, hour: "numeric" })) : "",
+    full: plainSpaces(date.toLocaleTimeString("en-CA", { timeZone: TORONTO, hour: "numeric", minute: "2-digit" })),
   };
 }
 

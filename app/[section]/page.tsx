@@ -13,7 +13,8 @@ export function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { section } = await params;
-  return { title: `${SECTIONS[section as SectionId].title} | The OpenTO` };
+  const { seoTitle, seoDescription } = SECTIONS[section as SectionId];
+  return { title: seoTitle, description: seoDescription, alternates: { canonical: `/${section}` } };
 }
 
 export default async function Page({ params }: Props) {

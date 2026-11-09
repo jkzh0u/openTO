@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SECTION_IDS, SECTIONS } from "../lib/news";
+import { plainSpaces, SECTION_IDS, SECTIONS } from "../lib/news";
 import WeatherEar from "./WeatherEar";
 
 const TORONTO = "America/Toronto";
@@ -11,6 +11,8 @@ export default function Masthead({ now }: { now: number | null }) {
   const pathname = usePathname();
   const today = now === null ? null : new Date(now);
   const current = (href: string) => (pathname === href ? "page" : undefined);
+  // Section pages use their own title as the main heading.
+  const Nameplate = pathname === "/" ? "h1" : "p";
 
   return (
     <header className="masthead">
@@ -29,16 +31,16 @@ export default function Masthead({ now }: { now: number | null }) {
         </span>
         <span>
           {today
-            ? `${today.toLocaleTimeString("en-CA", { timeZone: TORONTO, hour: "numeric", minute: "2-digit" })} Toronto`
+            ? `${plainSpaces(today.toLocaleTimeString("en-CA", { timeZone: TORONTO, hour: "numeric", minute: "2-digit" }))} Toronto`
             : " "}
         </span>
       </div>
       <div className="masthead__main">
         <WeatherEar />
         <div>
-          <h1 className="masthead__name">
+          <Nameplate className="masthead__name">
             <Link href="/">The OpenTO</Link>
-          </h1>
+          </Nameplate>
           <p className="masthead__tagline">toronto&apos;s open news</p>
         </div>
       </div>

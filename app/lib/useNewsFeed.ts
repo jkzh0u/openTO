@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { recordFireUpdates } from "./fireTimeline";
-import { LOADERS, SECTION_IDS, type GoLine, type SectionId, type Story } from "./news";
+import { LOADERS, newestFirst, SECTION_IDS, type GoLine, type SectionId, type Story } from "./news";
 
 const POLL_MS = 60_000;
 const MAX_BREAKING = 20;
@@ -10,16 +10,8 @@ const MAX_BREAKING = 20;
 export type Feed = { stories: Story[]; goLines?: GoLine[]; status: "loading" | "ready" | "error" };
 export type Feeds = Record<SectionId, Feed>;
 
-const LOADING: Feed = { stories: [], status: "loading" };
-const INITIAL_FEEDS: Feeds = { police: LOADING, fire: LOADING, ttc: LOADING, go: LOADING };
-
-function newestFirst(stories: Story[]): Story[] {
-  const unique = [...new Map(stories.map((story) => [story.id, story])).values()];
-  return unique.sort((a, b) => b.time.getTime() - a.time.getTime());
-}
-
-export function useNewsFeed() {
-  const [feeds, setFeeds] = useState(INITIAL_FEEDS);
+export function useNewsFeed(initialFeeds: Feeds) {
+  const [feeds, setFeeds] = useState(initialFeeds);
   const [breaking, setBreaking] = useState<Story[]>([]);
 
   useEffect(() => {
@@ -104,11 +96,12 @@ function subscribeToClock(onTick: () => void) {
   return () => clearInterval(timer);
 }
 
-// The current time rounded to the minute, or null while server rendering.
-export function useNow(): number | null {
+// The current time rounded to the minute. The server's time is used for the first render,
+// so the browser starts out matching the HTML it was sent.
+export function useNow(serverNow: number): number {
   return useSyncExternalStore(
     subscribeToClock,
     () => Math.floor(Date.now() / 60_000) * 60_000,
-    () => null
+    () => serverNow
   );
 }

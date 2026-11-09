@@ -16,7 +16,7 @@ using publicly accessible data, all of this information is displayed and eaasily
 - added a breaking news banner that rotates through the latest news
 - added a police page with stats and a map of calls across the 16 police divisions
 - added a fire page with stats and a map of active incidents at their nearest fire hall
-- drew my own mini subway map with closed stations and slow zones 
+- mini subway map to show closed stations and slow zones 
 - added toronto weather using the open-meteo API
 - used github actions to build a docker image on every push 
 - runs on my homeserver using clodufare and nginx proxy manager
@@ -25,7 +25,6 @@ using publicly accessible data, all of this information is displayed and eaasily
 - store fire and police history in a database (sqlite prob)
 - add the open government licence credit to the footer
 - figure out what the HP police division is and label it properly
-- add a favicon
 
 ## notice: 
 AI was used in the development of this site.

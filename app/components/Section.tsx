@@ -188,10 +188,10 @@ export function SectionPage({ id }: { id: SectionId }) {
     <main className={`section section--${id} section-page`}>
       <header className="section__head">
         <p className="section__kicker">{meta.kicker}</p>
-        <h2 className="section__title section-page__title">
+        <h1 className="section__title section-page__title">
           {meta.title}
           {id === "ttc" && <TtcModeIcons />}
-        </h2>
+        </h1>
       </header>
 
       {id === "police" && <PoliceStats />}
