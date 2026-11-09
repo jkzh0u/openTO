@@ -5,6 +5,7 @@ import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { formatDateTime, SECTIONS, timeAgo, type SectionId, type Story } from "../lib/news";
 import type { Feed } from "../lib/useNewsFeed";
 import FireGuide from "./FireGuide";
+import FireMap from "./FireMap";
 import GoLineHeading from "./GoLineHeading";
 import { useNews } from "./NewsShell";
 import PoliceStats from "./PoliceStats";
@@ -190,7 +191,12 @@ export function SectionPage({ id }: { id: SectionId }) {
             </>
           )}
         </div>
-        {id === "fire" && <FireGuide />}
+        {id === "fire" && (
+          <div className="section-page__rail">
+            <FireMap />
+            <FireGuide />
+          </div>
+        )}
         {id === "ttc" && <TtcMiniMap />}
       </div>
     </main>

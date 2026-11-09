@@ -535,9 +535,18 @@ button {
 
 .section-page__columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 420px;
   align-items: start;
   gap: 36px;
+}
+
+.section-page__rail {
+  display: grid;
+  gap: 20px;
+}
+
+.section-page__rail figure {
+  margin: 0;
 }
 
 .section-page__columns--map {
@@ -1145,6 +1154,147 @@ button {
 
 .stats__map--compact .map__shape path {
   fill: var(--paper);
+}
+
+/* ---------- fire map ---------- */
+
+.fire-map {
+  --mark: #d9480f;
+}
+
+.fire-map .stats__title {
+  margin-bottom: 8px;
+}
+
+.fire-map__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  margin-top: 3px;
+  color: var(--ink-soft);
+  font-family: var(--font-label), sans-serif;
+  font-size: 0.76rem;
+  font-weight: 400;
+}
+
+.fire-map__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.fire-map__key {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.fire-map__key--incident {
+  background: var(--mark);
+}
+
+.fire-map__key--hall {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--ink-soft);
+}
+
+.fire-map__key--route {
+  width: 14px;
+  height: 0;
+  border-top: 1px solid var(--mark);
+  border-radius: 0;
+}
+
+.fire-map__outline path {
+  fill: none;
+  stroke: #9d9078;
+  stroke-width: 2;
+}
+
+.fire-map__land path {
+  fill: var(--page);
+  stroke: var(--page);
+  stroke-width: 1;
+}
+
+.fire-map__route {
+  stroke: var(--mark);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+.fire-map__hall {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  margin: -2.5px 0 0 -2.5px;
+  border: 1px solid var(--ink-soft);
+  border-radius: 50%;
+  background: var(--page);
+  pointer-events: none;
+}
+
+.fire-map__hall--responding {
+  background: var(--ink-soft);
+}
+
+.fire-map__hall--incident {
+  z-index: 2;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border: 0;
+  background: var(--mark);
+  box-shadow: 0 0 0 2px var(--page);
+}
+
+.fire-map__hall--active {
+  z-index: 3;
+  outline: 1.5px solid var(--ink);
+  outline-offset: 1px;
+}
+
+.fire-map__num {
+  position: absolute;
+  z-index: 2;
+  color: var(--ink);
+  font-family: var(--font-label), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 0 3px var(--page), 0 0 3px var(--page);
+  transform: translate(8px, -50%);
+  pointer-events: none;
+}
+
+.stats__map--compact.fire-map .fire-map__land path {
+  stroke: var(--paper);
+}
+
+.stats__map--compact .fire-map__hall {
+  width: 4px;
+  height: 4px;
+  margin: -2px 0 0 -2px;
+  background: var(--paper);
+}
+
+.stats__map--compact .fire-map__hall--responding {
+  background: var(--ink-soft);
+}
+
+.stats__map--compact .fire-map__hall--incident {
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  background: var(--mark);
+  box-shadow: 0 0 0 1.5px var(--paper);
+}
+
+.stats__map--compact .fire-map__num {
+  font-size: 0.62rem;
+  transform: translate(6px, -50%);
 }
 
 /* ---------- TTC mini map ---------- */

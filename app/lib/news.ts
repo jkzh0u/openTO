@@ -11,6 +11,7 @@ export type Story = {
   goLine?: { name: string; colour: string; textColour: string };
   mapUrl?: string;
   delayMinutes?: number;
+  fire?: { station: string; units: string[] };
   police?: { type: string; division: string; lat: number | null; lng: number | null };
   ttc?: {
     label: string;
@@ -252,6 +253,7 @@ async function loadFire(): Promise<Story[]> {
     return {
       id: `fire-${e.eventNum}`,
       section: "fire",
+      fire: { station: e.area, units: e.units },
       headline: `${alarm}${type} ${place}`,
       summary: `Toronto Fire sent ${unitCount} to ${destination}${cross && street ? `, between ${cross}` : ""}.`,
       time,

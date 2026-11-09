@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import FireMap from "./components/FireMap";
 import { ByTheNumbers, GoLineStatus } from "./components/FrontExtras";
 import { MiniPoliceMap } from "./components/PoliceStats";
 import { SectionPreview } from "./components/Section";
@@ -8,6 +9,7 @@ import { SECTION_IDS, type SectionId } from "./lib/news";
 // Always shown below a column's stories.
 const AFTER: Partial<Record<SectionId, ReactNode>> = {
   police: <MiniPoliceMap />,
+  fire: <FireMap compact />,
   ttc: <TtcMiniMap />,
 };
 
