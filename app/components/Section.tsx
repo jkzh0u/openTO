@@ -4,8 +4,7 @@ import Link from "next/link";
 import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { formatDateTime, SECTIONS, timeAgo, type SectionId, type Story } from "../lib/news";
 import type { Feed } from "../lib/useNewsFeed";
-import FireGuide from "./FireGuide";
-import FireMap from "./FireMap";
+import FireStats from "./FireStats";
 import GoLineHeading from "./GoLineHeading";
 import { useNews } from "./NewsShell";
 import PoliceStats from "./PoliceStats";
@@ -16,7 +15,6 @@ import TtcMiniMap from "./TtcMiniMap";
 const PREVIEW_COUNTS: Record<SectionId, number> = { police: 10, fire: 10, ttc: 5, go: 5 };
 
 const COLUMN_CLASSES: Partial<Record<SectionId, string>> = {
-  fire: "section-page__columns",
   ttc: "section-page__columns section-page__columns--map",
 };
 
@@ -48,7 +46,8 @@ function StoryLink({ story, variant }: { story: Story; variant?: "lead" | "compa
       {story.goLine && <GoLineHeading line={story.goLine} />}
       <span className="story__meta">
         {breakingIds.has(story.id) && <span className="story__new">New</span>}
-        {now !== null && timeAgo(story.time, now)}
+        {story.fire?.updates && story.fire.updates.length > 1 && <span className="story__upd">Upd</span>}
+        {story.goScheduled ? "Scheduled" : now !== null && timeAgo(story.time, now)}
       </span>
       <span className="story__headline">{story.headline}</span>
       {variant !== "compact" && <span className="story__summary">{story.summary}</span>}
@@ -56,8 +55,8 @@ function StoryLink({ story, variant }: { story: Story; variant?: "lead" | "compa
   );
 }
 
-// Scheduled TTC work stays out of the "what's happening" lists until it starts.
-const isHappeningNow = (story: Story) => !story.ttc || story.ttc.inEffect;
+// Scheduled TTC and GO work stays out of the "what's happening" lists.
+const isHappeningNow = (story: Story) => !story.goScheduled && (!story.ttc || story.ttc.inEffect);
 
 function feedNotice(id: SectionId, feed: Feed): string | null {
   if (feed.status === "error") return "The wire went down. Trying again in a minute.";
@@ -147,13 +146,43 @@ export function SectionPage({ id }: { id: SectionId }) {
   const feed = useNews().feeds[id];
   const meta = SECTIONS[id];
   const notice = feedNotice(id, feed);
-  // TTC alerts read as an even status list, so none of them gets the big lead treatment.
   const happening = feed.stories.filter(isHappeningNow);
-  const lead = id === "ttc" ? undefined : happening[0];
+  // TTC and Fire read as even lists, so none of their stories gets the big lead treatment.
+  const lead = id === "ttc" || id === "fire" ? undefined : happening[0];
   const rest = lead ? happening.slice(1) : happening;
   const scheduled = feed.stories
     .filter((story) => !isHappeningNow(story))
-    .sort((a, b) => a.ttc!.scheduledFor!.getTime() - b.ttc!.scheduledFor!.getTime());
+    .sort(
+      (a, b) =>
+        (a.ttc?.scheduledFor?.getTime() ?? a.goScheduleOrder ?? 0) -
+        (b.ttc?.scheduledFor?.getTime() ?? b.goScheduleOrder ?? 0)
+    );
+
+  const storyList = (
+    <div>
+      {notice && <p className="section__notice">{notice}</p>}
+      {lead && <StoryLink story={lead} variant="lead" />}
+      <ul className="section__list section__list--grid">
+        {rest.map((story) => (
+          <li key={story.id}>
+            <StoryLink story={story} />
+          </li>
+        ))}
+      </ul>
+      {scheduled.length > 0 && (
+        <>
+          <h3 className="section__subhead">Scheduled</h3>
+          <ul className="section__list section__list--grid">
+            {scheduled.map((story) => (
+              <li key={story.id}>
+                <StoryLink story={story} />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <main className={`section section--${id} section-page`}>
@@ -167,38 +196,14 @@ export function SectionPage({ id }: { id: SectionId }) {
 
       {id === "police" && <PoliceStats />}
 
-      <div className={COLUMN_CLASSES[id]}>
-        <div>
-          {notice && <p className="section__notice">{notice}</p>}
-          {lead && <StoryLink story={lead} variant="lead" />}
-          <ul className="section__list section__list--grid">
-            {rest.map((story) => (
-              <li key={story.id}>
-                <StoryLink story={story} />
-              </li>
-            ))}
-          </ul>
-          {scheduled.length > 0 && (
-            <>
-              <h3 className="section__subhead">Scheduled</h3>
-              <ul className="section__list section__list--grid">
-                {scheduled.map((story) => (
-                  <li key={story.id}>
-                    <StoryLink story={story} />
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+      {id === "fire" ? (
+        <FireStats>{storyList}</FireStats>
+      ) : (
+        <div className={COLUMN_CLASSES[id]}>
+          {storyList}
+          {id === "ttc" && <TtcMiniMap />}
         </div>
-        {id === "fire" && (
-          <div className="section-page__rail">
-            <FireMap />
-            <FireGuide />
-          </div>
-        )}
-        {id === "ttc" && <TtcMiniMap />}
-      </div>
+      )}
     </main>
   );
 }

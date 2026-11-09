@@ -16,7 +16,7 @@ export function GoLineStatus() {
   // Lines with problems go first, since a short box only has room for the top few.
   const rows = goLines
     .map((line) => {
-      const lineStories = stories.filter((story) => story.goLine?.name === line.name);
+      const lineStories = stories.filter((story) => story.goLine?.name === line.name && !story.goScheduled);
       const worst = Math.max(0, ...lineStories.map((story) => story.delayMinutes ?? 0));
       return { line, worst, hasAlert: lineStories.length > 0 };
     })

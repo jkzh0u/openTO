@@ -63,7 +63,7 @@ export default function FireMap({ compact }: { compact?: boolean }) {
   const lakeY = ((north - LAKE_LABEL.lat) / (north - south)) * 100;
 
   const incidentHalls = [...incidentsByHall.keys()].flatMap((id) => STATION_BY_ID.get(id) ?? []);
-  const figureClass = compact ? "fire-map stats__map--compact" : "fire-map";
+  const figureClass = compact ? "fire-map stats__map--compact" : "fire-map stats__map";
 
   return (
     <figure className={figureClass}>

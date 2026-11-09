@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { recordFireUpdates } from "./fireTimeline";
 import { LOADERS, SECTION_IDS, type GoLine, type SectionId, type Story } from "./news";
 
 const POLL_MS = 60_000;
@@ -30,6 +31,7 @@ export function useNewsFeed() {
         const { stories: loaded, goLines } = await LOADERS[section]();
         const stories = newestFirst(loaded);
         if (cancelled) return;
+        if (section === "fire") recordFireUpdates(stories);
 
         // A feed's first successful load only records what already exists, so opening
         // the page (or a feed recovering from an outage) doesn't flag everything as new.

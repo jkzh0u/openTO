@@ -1,9 +1,52 @@
 "use client";
 
 import { useEffect, useRef, type MouseEvent } from "react";
-import { formatDateTime, SECTIONS, type Story } from "../lib/news";
+import type { FireUpdate } from "../lib/fireTimeline";
+import { formatDateTime, SECTIONS, unitType, type Story } from "../lib/news";
 import GoLineHeading from "./GoLineHeading";
 import { TtcBadge } from "./TtcIcons";
+
+function describeUnit(unit: string) {
+  const type = unitType(unit);
+  return type === "Other" ? unit : `${unit} (${type})`;
+}
+
+function FireUpdates({ updates }: { updates: FireUpdate[] }) {
+  return (
+    <section className="dialog__updates">
+      <h3>Updates</h3>
+      <ul>
+        {updates.map((update, index) => {
+          const alarmChanged = index > 0 && update.alarm !== updates[index - 1].alarm;
+          return (
+            <li key={update.at}>
+              <time>
+                {new Date(update.at).toLocaleTimeString("en-CA", {
+                  timeZone: "America/Toronto",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })}
+              </time>
+              <b>[{String(update.alarm).padStart(2, "0")}]</b>
+              <span>
+                {update.added.length > 0 && (
+                  <span className="dialog__added">+{update.added.map(describeUnit).join(", ")} </span>
+                )}
+                {update.removed.length > 0 && (
+                  <span className="dialog__removed">−{update.removed.map(describeUnit).join(", ")} </span>
+                )}
+                {alarmChanged && <span>Alarm level now {update.alarm}</span>}
+                {index === 0 && update.added.length === 0 && <span>No units listed yet</span>}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="dialog__note">Tracked from when this browser first saw the call. [00] is the alarm level.</p>
+    </section>
+  );
+}
 
 export default function StoryDialog({ story, onClose }: { story: Story; onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -56,6 +99,8 @@ export default function StoryDialog({ story, onClose }: { story: Story; onClose:
             </div>
           ))}
         </dl>
+
+        {story.fire?.updates && <FireUpdates updates={story.fire.updates} />}
 
         {story.mapUrl && (
           <a className="dialog__link" href={story.mapUrl} target="_blank" rel="noreferrer">

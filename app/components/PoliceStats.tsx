@@ -230,7 +230,7 @@ export function MiniPoliceMap() {
   return calls.length > 0 ? <CallMap calls={calls} compact /> : null;
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+export function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="stat">
       <span className="stat__value">{value}</span>

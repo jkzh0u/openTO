@@ -1,3 +1,5 @@
+import type { FireUpdate } from "./fireTimeline";
+
 export type SectionId = "police" | "fire" | "ttc" | "go";
 
 export type Story = {
@@ -11,7 +13,9 @@ export type Story = {
   goLine?: { name: string; colour: string; textColour: string };
   mapUrl?: string;
   delayMinutes?: number;
-  fire?: { station: string; units: string[] };
+  fire?: { station: string; units: string[]; type: string; alarm: number; updates?: FireUpdate[] };
+  goScheduled?: boolean;
+  goScheduleOrder?: number;
   police?: { type: string; division: string; lat: number | null; lng: number | null };
   ttc?: {
     label: string;
@@ -56,7 +60,7 @@ export const SECTIONS: Record<
   },
   go: {
     title: "GO Transit",
-    kicker: "Schedule sold separately",
+    kicker: "Take the GO",
     byline: "someone still on the platform",
     empty: "All trains on time. Please verify.",
   },
@@ -218,7 +222,7 @@ function describeAlarm(level: number): string {
   return entry ? `${level}: ${entry.meaning}` : String(level);
 }
 
-function unitType(unit: string): string {
+export function unitType(unit: string): string {
   const code = unit.toUpperCase();
   return UNIT_TYPES[code] ?? UNIT_TYPES[code.replace(/\d+$/, "")] ?? "Other";
 }
@@ -241,6 +245,7 @@ function cleanFireStreet(street: string): string {
 async function loadFire(): Promise<Story[]> {
   const events: FireEvent[] = await getJson("/api/fire");
   return events.map((e): Story => {
+    const units = [...new Set(e.units)]; // The feed sometimes lists a unit twice.
     const street = cleanFireStreet(e.street);
     const cross = titleCase(e.crossStreets).replace(" / ", " and ");
     const isPostalArea = /^[A-Z]\d[A-Z]$/.test(street);
@@ -248,14 +253,18 @@ async function loadFire(): Promise<Story[]> {
     const alarm = e.alarmLevel > 0 ? `${e.alarmLevel}-alarm ` : "";
     const place = street ? `${isPostalArea ? "in" : "on"} ${street}` : cross ? `near ${cross}` : "at an undisclosed location";
     const destination = isPostalArea ? `the ${street} area` : street ? street : cross ? cross : "an undisclosed location";
-    const unitCount = `${e.units.length} ${e.units.length === 1 ? "unit" : "units"}`;
+    const between = cross && street ? `, between ${cross}` : "";
+    const unitCount = `${units.length} ${units.length === 1 ? "unit" : "units"}`;
     const time = parseLocalTime(e.dispatchTime);
     return {
       id: `fire-${e.eventNum}`,
       section: "fire",
-      fire: { station: e.area, units: e.units },
+      fire: { station: e.area, units, type, alarm: e.alarmLevel },
       headline: `${alarm}${type} ${place}`,
-      summary: `Toronto Fire sent ${unitCount} to ${destination}${cross && street ? `, between ${cross}` : ""}.`,
+      summary:
+        units.length > 0
+          ? `Toronto Fire sent ${unitCount} to ${destination}${between}.`
+          : `Toronto Fire was called to ${destination}${between}. No units are listed yet.`,
       time,
       facts: compactFacts([
         ["Incident type", type],
@@ -264,7 +273,7 @@ async function loadFire(): Promise<Story[]> {
         ["Cross streets", cross],
         ["Nearest station", e.area ? `Station ${e.area}` : null],
         ["Dispatched", formatDateTime(time)],
-        ["Units dispatched", describeUnits(e.units)],
+        ["Units dispatched", describeUnits(units)],
         ["Event number", e.eventNum],
       ]),
     };
@@ -387,6 +396,7 @@ async function loadTTC(): Promise<Story[]> {
 // ---------- GO Transit ----------
 
 const GO_ALERT_CATEGORIES = ["TDELAY"];
+const GO_SCHEDULED_CATEGORIES = ["TADDS"];
 
 type RawGoNotification = {
   SubCategory: string;
@@ -419,6 +429,13 @@ type RawGoLine = {
 function formatDelay(duration: string): string {
   const [hours, minutes] = duration.split(":").map(Number);
   return hours > 0 ? `${hours} hr ${minutes} min` : `${minutes} min`;
+}
+
+// "Nov. 14-15: Service adjustments" → a number that sorts by that first date.
+function scheduleOrder(subject: string): number {
+  const match = subject.match(/^([A-Z][a-z]{2})[a-z]*\.?\s+(\d{1,2})/);
+  if (!match) return Number.MAX_SAFE_INTEGER;
+  return "JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(match[1]) * 100 + Number(match[2]);
 }
 
 function goLineHeading(line: RawGoLine): NonNullable<Story["goLine"]> {
@@ -461,9 +478,10 @@ async function loadGO(): Promise<FeedData> {
 
   const alerts = lines.flatMap((line) =>
     (line.Notifications?.Notification ?? [])
-      .filter((n) => GO_ALERT_CATEGORIES.includes(n.SubCategory))
+      .filter((n) => GO_ALERT_CATEGORIES.includes(n.SubCategory) || GO_SCHEDULED_CATEGORIES.includes(n.SubCategory))
       .map((n): Story => {
         const time = parseLocalTime(n.PostedDateTime);
+        const isScheduled = GO_SCHEDULED_CATEGORIES.includes(n.SubCategory);
         return {
           // Not the posted time, because Metrolinx bumps that whenever an alert is edited.
           id: `go-alert-${line.CorridorCode}-${n.MessageSubject}`,
@@ -472,9 +490,12 @@ async function loadGO(): Promise<FeedData> {
           headline: n.MessageSubject.replace(`${line.CorridorName} - `, ""),
           summary: htmlToText(n.MessageBody),
           time,
+          goScheduled: isScheduled,
+          goScheduleOrder: isScheduled ? scheduleOrder(n.MessageSubject) : undefined,
           goLine: goLineHeading(line),
           facts: compactFacts([
             ["Line", line.CorridorName],
+            ["Status", isScheduled ? "Scheduled" : "In effect"],
             ["Posted", formatDateTime(time)],
           ]),
         };
