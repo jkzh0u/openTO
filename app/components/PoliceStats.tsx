@@ -170,7 +170,7 @@ function CallMap({ calls, compact }: { calls: Story[]; compact?: boolean }) {
   return (
     <figure className={compact ? "stats__map stats__map--compact" : "stats__map"}>
       <figcaption className="stats__title">
-        {compact ? "Police Map" : "Where the calls are"}
+        {compact ? "Call Map" : "Where the calls are"}
         {!compact && (
           <span className="stats__sub">Toronto by police division. Each dot is one call, click one to open it.</span>
         )}

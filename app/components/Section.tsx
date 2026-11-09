@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { formatDateTime, SECTIONS, timeAgo, type SectionId, type Story } from "../lib/news";
 import type { Feed } from "../lib/useNewsFeed";
 import FireGuide from "./FireGuide";
@@ -11,7 +11,8 @@ import PoliceStats from "./PoliceStats";
 import { TtcBadge, TtcModeIcons } from "./TtcIcons";
 import TtcMiniMap from "./TtcMiniMap";
 
-const PREVIEW_COUNT = 5;
+// The most each front-page column renders. CSS then shows however many fit the screen.
+const PREVIEW_COUNTS: Record<SectionId, number> = { police: 10, fire: 10, ttc: 5, go: 5 };
 
 const COLUMN_CLASSES: Partial<Record<SectionId, string>> = {
   fire: "section-page__columns",
@@ -63,13 +64,50 @@ function feedNotice(id: SectionId, feed: Feed): string | null {
   return feed.stories.filter(isHappeningNow).length === 0 ? SECTIONS[id].empty : null;
 }
 
+// On the fit-to-window layout, ends the list at its last whole story so no gap is left under it.
+function useListEndsAtLastRow(contentKey: string) {
+  const listRef = useRef<HTMLUListElement>(null);
+
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list?.parentElement) return;
+    let cancelled = false;
+
+    function snap() {
+      if (!list || cancelled) return;
+      list.style.maxHeight = "";
+      if (getComputedStyle(list).flexWrap !== "wrap") return;
+
+      const box = list.getBoundingClientRect();
+      const visible = [...list.children].filter((row) => {
+        const rect = row.getBoundingClientRect();
+        return rect.width > 0 && rect.left < box.right - 1;
+      });
+      const lastRow = visible[visible.length - 1];
+      if (lastRow) list.style.maxHeight = `${Math.ceil(lastRow.getBoundingClientRect().bottom - box.top)}px`;
+    }
+
+    snap();
+    document.fonts.ready.then(snap);
+    // Watches the column, whose height doesn't depend on the list, so this can't loop.
+    const observer = new ResizeObserver(snap);
+    observer.observe(list.parentElement);
+    return () => {
+      cancelled = true;
+      observer.disconnect();
+    };
+  }, [contentKey]);
+
+  return listRef;
+}
+
 // One column of the front page: the latest few stories and a link to the rest.
 export function SectionPreview({ id, after, children }: { id: SectionId; after?: ReactNode; children?: ReactNode }) {
   const feed = useNews().feeds[id];
   const meta = SECTIONS[id];
   const notice = feedNotice(id, feed);
-  // The TTC column also carries the subway map, so it lists fewer alerts.
-  const preview = feed.stories.filter(isHappeningNow).slice(0, id === "ttc" ? 3 : PREVIEW_COUNT);
+  const preview = feed.stories.filter(isHappeningNow).slice(0, PREVIEW_COUNTS[id]);
+  const listRef = useListEndsAtLastRow(preview.map((story) => story.id).join());
 
   return (
     <section className={`section section--${id}`}>
@@ -83,7 +121,7 @@ export function SectionPreview({ id, after, children }: { id: SectionId; after?:
 
       {notice && <p className="section__notice">{notice}</p>}
 
-      <ul className="section__list">
+      <ul ref={listRef} className="section__list">
         {preview.map((story) => (
           <li key={story.id}>
             <StoryLink story={story} variant="compact" />

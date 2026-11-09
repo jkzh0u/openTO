@@ -1,28 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { activeTtcDisruptions, ALARM_LEVELS, type SectionId } from "../lib/news";
+import { activeTtcDisruptions, type SectionId } from "../lib/news";
 import GoLineHeading from "./GoLineHeading";
 import { useNews } from "./NewsShell";
-
-export function FireAlarmKey() {
-  return (
-    <aside className="filler">
-      <header className="filler__head">
-        <p className="section__kicker">How big is it</p>
-        <h3 className="filler__title">Alarm Levels</h3>
-      </header>
-      <ul className="filler__list">
-        {ALARM_LEVELS.map(({ level, meaning }) => (
-          <li key={level} className="filler-row filler-row--alarm">
-            <span className="filler-row__value">{level}</span>
-            <span>{meaning}</span>
-          </li>
-        ))}
-      </ul>
-    </aside>
-  );
-}
 
 function formatMinutes(minutes: number): string {
   return minutes >= 60 ? `${Math.floor(minutes / 60)} hr ${minutes % 60} min late` : `${minutes} min late`;
@@ -42,7 +23,7 @@ export function GoLineStatus() {
     .sort((a, b) => b.worst - a.worst || Number(b.hasAlert) - Number(a.hasAlert));
 
   return (
-    <aside className="filler">
+    <aside className="filler filler--fit">
       <header className="filler__head">
         <p className="section__kicker">All lines</p>
         <h3 className="filler__title">Line Status</h3>

@@ -340,6 +340,20 @@ button {
   background: var(--page);
 }
 
+/* Hugs its rows instead of filling the column, and only shrinks if the column is short. */
+.filler--fit {
+  height: fit-content;
+  max-height: 100%;
+}
+
+.filler--fit .filler__list {
+  flex: 0 1 auto;
+}
+
+.filler--fit .filler__list li {
+  flex: none;
+}
+
 @container (max-height: 140px) {
   .filler {
     display: none;
@@ -382,14 +396,6 @@ button {
   gap: 8px;
   font-size: 0.93rem;
   line-height: 1.25;
-}
-
-.filler-row--alarm {
-  grid-template-columns: 1rem minmax(0, 1fr);
-}
-
-.filler__list li.filler-row--alarm {
-  padding: 3px 0;
 }
 
 .filler-row .go-line {
@@ -1107,19 +1113,6 @@ button {
   font-size: 0.9rem;
 }
 
-/* On the front page both maps stretch to the bottom of their column. */
-.front > .section .ttc-map,
-.front > .section .stats__map--compact {
-  flex: 1 0 auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.front > .section .ttc-map__plot,
-.front > .section .stats__map--compact .map {
-  margin: auto 0;
-}
-
 /* ---------- police mini map ---------- */
 
 .stats__map--compact {
@@ -1405,6 +1398,15 @@ button {
   color: inherit;
 }
 
+/* Scrolling layouts (phones, short windows) keep the front page to a few stories. */
+.front .section__list li:nth-child(n + 6) {
+  display: none;
+}
+
+.front .section--ttc .section__list li:nth-child(n + 4) {
+  display: none;
+}
+
 /* ---------- smaller screens ---------- */
 
 @media (max-width: 900px) {
@@ -1517,6 +1519,113 @@ button {
   .dialog__facts div {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
+  }
+}
+
+/* ---------- front page fits the window on desktop ---------- */
+
+@media (min-width: 1041px) and (min-height: 700px) {
+  body:has(.front) {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .paper:has(.front) {
+    min-height: 0;
+    padding-bottom: 8px;
+  }
+
+  .masthead__name {
+    margin-top: min(12px, 0.8dvh);
+    font-size: min(4.2rem, 6.6dvh);
+  }
+
+  .masthead__tagline {
+    margin: 2px 0 min(10px, 0.8dvh);
+  }
+
+  .masthead__strip,
+  .masthead__nav {
+    padding: min(9px, 0.7dvh) 0;
+  }
+
+  .front {
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: min(28px, 1.6dvh) 28px;
+    margin-top: min(20px, 1.4dvh);
+  }
+
+  .front > .section {
+    min-height: 0;
+  }
+
+  .front > .section > .section__head,
+  .front > .section > .section__all,
+  .front > .section > .ttc-map,
+  .front > .section > .stats__map--compact {
+    flex: none;
+  }
+
+  /* Stories that don't fit wrap into a clipped second column, so none is cut in half. */
+  .front .section__list {
+    flex: 0 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-flow: column wrap;
+    align-content: flex-start;
+    overflow: hidden;
+  }
+
+  .front .section__list li,
+  .front .section__list li:nth-child(n + 4),
+  .front .section--ttc .section__list li:nth-child(n + 4) {
+    display: block;
+    width: 100%;
+  }
+
+  .front .story__headline,
+  .front .story__ttc-detail {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
+  .front .ttc-map,
+  .front .stats__map--compact {
+    margin-top: min(14px, 1dvh);
+    padding: min(10px, 0.8dvh) 12px;
+  }
+
+  .front .ttc-map__plot {
+    width: min(100%, calc(18dvh * 300 / 204));
+    margin: 0 auto;
+    aspect-ratio: 300 / 204;
+  }
+
+  .front .stats__map--compact .map {
+    width: min(100%, calc(18dvh * 1.379));
+    margin: 0 auto;
+  }
+
+  .tile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 5px;
+  }
+
+  .tile__value {
+    font-size: min(2.6rem, 4.6dvh);
+    white-space: nowrap;
+  }
+
+  .colophon {
+    margin-top: min(24px, 1.2dvh);
+    padding-top: 5px;
+    font-size: 0.78rem;
   }
 }
 

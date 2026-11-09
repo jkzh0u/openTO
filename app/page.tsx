@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ByTheNumbers, FireAlarmKey, GoLineStatus } from "./components/FrontExtras";
+import { ByTheNumbers, GoLineStatus } from "./components/FrontExtras";
 import { MiniPoliceMap } from "./components/PoliceStats";
 import { SectionPreview } from "./components/Section";
 import TtcMiniMap from "./components/TtcMiniMap";
@@ -13,7 +13,6 @@ const AFTER: Partial<Record<SectionId, ReactNode>> = {
 
 // Shorter columns get these below their stories, in whatever room is left.
 const FILLERS: Partial<Record<SectionId, ReactNode>> = {
-  fire: <FireAlarmKey />,
   go: <GoLineStatus />,
 };
 
