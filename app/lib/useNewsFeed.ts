@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { LOADERS, SECTION_IDS, type GoLine, type SectionId, type Story } from "./news";
 
 const POLL_MS = 60_000;
@@ -59,6 +59,42 @@ export function useNewsFeed() {
   }, []);
 
   return { feeds, breaking };
+}
+
+export type SubwayIssue = { kind: "closed" | "slow"; line: string; stations: string[]; text: string };
+
+export function useSubwayIssues() {
+  const [issues, setIssues] = useState<SubwayIssue[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const response = await fetch("/api/ttc-subway");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        if (cancelled) return;
+        setIssues(data.issues);
+        setLoaded(true);
+        setFailed(false);
+      } catch (error) {
+        console.error("Could not load the subway status", error);
+        if (!cancelled) setFailed(true);
+      }
+    }
+
+    load();
+    const timer = setInterval(load, POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
+  return useMemo(() => ({ issues, loaded, failed }), [issues, loaded, failed]);
 }
 
 function subscribeToClock(onTick: () => void) {

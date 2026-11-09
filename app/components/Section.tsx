@@ -53,11 +53,12 @@ function feedNotice(id: SectionId, feed: Feed): string | null {
 }
 
 // One column of the front page: the latest few stories and a link to the rest.
-export function SectionPreview({ id, children }: { id: SectionId; children?: ReactNode }) {
+export function SectionPreview({ id, after, children }: { id: SectionId; after?: ReactNode; children?: ReactNode }) {
   const feed = useNews().feeds[id];
   const meta = SECTIONS[id];
   const notice = feedNotice(id, feed);
-  const preview = feed.stories.slice(0, PREVIEW_COUNT);
+  // The TTC column also carries the subway map, so it lists fewer alerts.
+  const preview = feed.stories.slice(0, id === "ttc" ? 3 : PREVIEW_COUNT);
 
   return (
     <section className={`section section--${id}`}>
@@ -85,6 +86,7 @@ export function SectionPreview({ id, children }: { id: SectionId; children?: Rea
         </Link>
       )}
 
+      {after}
       {children && <div className="filler-slot">{children}</div>}
     </section>
   );

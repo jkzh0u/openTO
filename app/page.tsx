@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { ByTheNumbers, GoLineStatus, TorontoConditions } from "./components/FrontExtras";
 import { SectionPreview } from "./components/Section";
+import TtcMiniMap from "./components/TtcMiniMap";
 import { SECTION_IDS, type SectionId } from "./lib/news";
 
 // Shorter columns get these below their stories, in whatever room is left.
@@ -13,7 +14,7 @@ export default function Home() {
   return (
     <main className="front">
       {SECTION_IDS.map((id) => (
-        <SectionPreview key={id} id={id}>
+        <SectionPreview key={id} id={id} after={id === "ttc" ? <TtcMiniMap /> : undefined}>
           {FILLERS[id]}
         </SectionPreview>
       ))}

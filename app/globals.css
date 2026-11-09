@@ -1032,6 +1032,132 @@ button {
   font-size: 0.9rem;
 }
 
+/* ---------- TTC mini map ---------- */
+
+.ttc-map {
+  margin: 14px 0 0;
+  padding: 10px 12px 12px;
+  background: var(--ink);
+  color: var(--page);
+}
+
+.ttc-map__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 10px;
+  margin-bottom: 4px;
+}
+
+.ttc-map__title {
+  margin: 0;
+  font-family: var(--font-headline), serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.ttc-map__legend {
+  display: flex;
+  gap: 10px;
+  font-family: var(--font-label), sans-serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.03em;
+}
+
+.ttc-map__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ttc-map__legend svg {
+  width: 11px;
+  height: 11px;
+  overflow: visible;
+}
+
+.ttc-map__plot {
+  position: relative;
+  touch-action: pan-y;
+}
+
+.ttc-map__plot > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ttc-map__line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ttc-map__station {
+  fill: var(--ink);
+}
+
+.ttc-map__interchange {
+  fill: var(--page);
+  stroke: var(--ink);
+  stroke-width: 1;
+}
+
+.ttc-map__amber {
+  fill: #ffb000;
+  stroke: var(--ink);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 2.5px #ffb000);
+}
+
+.ttc-map__red {
+  fill: #ff3b30;
+  stroke: var(--ink);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 0 2.5px #ff3b30);
+}
+
+.ttc-map__active {
+  fill: none;
+  stroke: var(--page);
+  stroke-width: 1.2;
+}
+
+.ttc-map__num {
+  fill: #fff;
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 8.5px;
+  font-weight: 600;
+}
+
+.ttc-map__num--dark {
+  fill: var(--ink);
+}
+
+.ttc-map__place {
+  fill: var(--page);
+  font-family: var(--font-label), sans-serif;
+  font-size: 8.5px;
+  letter-spacing: 0.03em;
+}
+
+.ttc-map .map__tip {
+  background: var(--page);
+  color: var(--ink);
+}
+
+.ttc-map__note {
+  display: block;
+}
+
+.ttc-map__error {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 /* ---------- story dialog ---------- */
 
 .dialog__ttc {

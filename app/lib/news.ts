@@ -20,6 +20,7 @@ export type Story = {
     status: TtcStatus;
     effect: string;
     detail: string | null;
+    inEffect: boolean;
   };
 };
 
@@ -282,7 +283,19 @@ type RawTtcAlert = {
   stopStart: string | null;
   stopEnd: string | null;
   activePeriod: { start: string; end: string };
+  childAlerts?: { startTime: string; endTime: string }[] | null;
 };
+
+// Planned work is often listed for days but only runs in nightly windows.
+function ttcAlertInEffect(a: RawTtcAlert, start: Date, end: Date | null): boolean {
+  const now = Date.now();
+  if (a.childAlerts?.length) {
+    return a.childAlerts.some(
+      (child) => parseLocalTime(child.startTime).getTime() <= now && now <= parseLocalTime(child.endTime).getTime()
+    );
+  }
+  return start.getTime() <= now && (end === null || now <= end.getTime());
+}
 
 const SUBWAY_LINE_COLOURS: Record<string, { background: string; color: string }> = {
   "1": { background: "#f8c300", color: "#1b1712" },
@@ -306,7 +319,7 @@ export function currentTtcDisruption(stories: Story[], now: number | null): Stor
 
 export function activeTtcDisruptions(stories: Story[], now: number | null): Story[] {
   const isActive = (story: Story) => now === null || story.time.getTime() <= now + 60_000;
-  return stories.filter((story) => story.ttc?.status !== "ok" && isActive(story));
+  return stories.filter((story) => story.ttc?.status !== "ok" && story.ttc?.inEffect && isActive(story));
 }
 
 async function loadTTC(): Promise<Story[]> {
@@ -331,6 +344,7 @@ async function loadTTC(): Promise<Story[]> {
           isLine: Boolean(lineColours),
           ...(lineColours ?? { background: "#d9271e", color: "#ffffff" }),
           status: ttcStatus(a.effectDesc),
+          inEffect: ttcAlertInEffect(a, start, end),
           effect: a.effectDesc,
           detail:
             a.stopStart && a.stopEnd

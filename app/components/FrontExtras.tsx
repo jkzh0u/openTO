@@ -103,8 +103,10 @@ function Tile({ id, value, label }: { id: SectionId; value: string; label: strin
 }
 
 export function ByTheNumbers() {
-  const { feeds, now } = useNews();
+  const { feeds, subway, now } = useNews();
   const known = (id: SectionId) => feeds[id].status === "ready" || feeds[id].stories.length > 0;
+  const slowZones = subway.issues.filter((issue) => issue.kind === "slow").length;
+  const ttcProblems = activeTtcDisruptions(feeds.ttc.stories, now).length + slowZones;
 
   const recentPolice = feeds.police.stories.filter(
     (story) => now !== null && now - story.time.getTime() <= 3_600_000
@@ -117,8 +119,8 @@ export function ByTheNumbers() {
       <Tile id="fire" value={known("fire") ? String(feeds.fire.stories.length) : "–"} label="Active fire incidents" />
       <Tile
         id="ttc"
-        value={known("ttc") ? String(activeTtcDisruptions(feeds.ttc.stories, now).length) : "–"}
-        label="Things wrong with the TTC"
+        value={known("ttc") ? String(ttcProblems) : "–"}
+        label={subway.loaded ? `Things wrong with the TTC, including ${slowZones} slow zones` : "Things wrong with the TTC"}
       />
       <Tile id="go" value={known("go") ? `${worstDelay} min` : "–"} label="Worst GO delay" />
     </section>

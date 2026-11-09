@@ -2,13 +2,14 @@
 
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import type { Story } from "../lib/news";
-import { useNewsFeed, useNow, type Feeds } from "../lib/useNewsFeed";
+import { useNewsFeed, useNow, useSubwayIssues, type Feeds } from "../lib/useNewsFeed";
 import BreakingBanner from "./BreakingBanner";
 import Masthead from "./Masthead";
 import StoryDialog from "./StoryDialog";
 
 type News = {
   feeds: Feeds;
+  subway: ReturnType<typeof useSubwayIssues>;
   breakingIds: Set<string>;
   now: number | null;
   openStory: (story: Story) => void;
@@ -25,12 +26,13 @@ export function useNews(): News {
 // Lives in the root layout so polling and the banner carry on across page changes.
 export default function NewsShell({ children }: { children: ReactNode }) {
   const { feeds, breaking } = useNewsFeed();
+  const subway = useSubwayIssues();
   const [selected, setSelected] = useState<Story | null>(null);
   const now = useNow();
   const newestForBanner = breaking.find((story) => story.section !== "go");
   const news = useMemo(
-    () => ({ feeds, now, openStory: setSelected, breakingIds: new Set(breaking.map((story) => story.id)) }),
-    [feeds, now, breaking]
+    () => ({ feeds, subway, now, openStory: setSelected, breakingIds: new Set(breaking.map((story) => story.id)) }),
+    [feeds, subway, now, breaking]
   );
 
   return (
